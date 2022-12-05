@@ -30,6 +30,18 @@ class SwitchTftpParser(object):
 
         data = self.reader.read_tftp(url, filename).split("\n")
 
+        for line in data:
+            line = line.strip()
+            if line.startswith("vlan"):
+                vlan_id = int(line.split()[1])
+                try:
+                    self.configuration.remove_vlan(self.configuration.get_vlan(vlan_id))
+                    self.logger.info("Removed vlan %s" % vlan_id)
+                    self.configuration.add_vlan(self.configuration.new("Vlan", vlan_id + 1 ))
+                    self.logger.info("Adding vlan %s" % vlan_id)
+                except ValueError:
+                    self.logger.info("Vlan %s already exists" % vlan_id)  
+
         command_processor.init(
             self.configuration, NoopTerminalController(),
             self.logger, NotPipingProcessor())
